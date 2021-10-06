@@ -13,7 +13,7 @@
 	.data
 	
 ARRAY_SIZE:
-	.word	10	# Change here to try other values (less than 10)
+	.word	10					# Change here to try other values (less than 10)
 FIBONACCI_ARRAY:
 	.word	1, 1, 2, 3, 5, 8, 13, 21, 34, 55
 STR_str:
@@ -25,36 +25,43 @@ STR_str:
 ##############################################################################
 #
 # DESCRIPTION:  For an array of integers, returns the total sum of all
-#		elements in the array.
+#				elements in the array.
 #
 # INPUT:        $a0 - address to first integer in array.
-#		$a1 - size of array, i.e., numbers of integers in the array.
+#				$a1 - size of array, i.e., numbers of integers in the array.
 #
 # OUTPUT:       $v0 - the total sum of all integers in the array.
 #
 ##############################################################################
 integer_array_sum:  
 
-DBG:	##### DEBUGG BREAKPOINT ######
+DBG:							##### DEBUGG BREAKPOINT ######
 
-        addi    $v0, $zero, 0           # Initialize Sum to zero.
-	add	$t0, $zero, $zero	# Initialize array index i to zero.
+    addi    $v0, $zero, 0       # Initialize Sum to zero.
+	add		$t0, $zero, $zero	# Initialize array index i to zero.
 	
 for_all_in_array:
 
 	#### Append a MIPS-instruktion before each of these comments
-	
-	# Done if i == N
-	# 4*i
-	# address = ARRAY + 4*i
-	# n = A[i]
-       	# Sum = Sum + n
-        # i++ 
-  	# next element
-	
+	#$v0 = Sum
+	#$t0 = i
+	#$a0 = array start address
+	#$a1 = array.size()
+	#$t3 = i*4 array iterator
+	#$t4 = array(i)
+	#$t5 = iterated array adress
+loop:
+	beq		$t0, $a1, end_for_all	# Done if i == N
+	sll 	$t3, $t0, 2				# 4*i
+	add 	$t5, $a0, $t3			# address = ARRAY + 4*i
+	lw		$t4, 0($t5)				# n = A[i]
+	add 	$v0, $v0, $t4			# Sum = Sum + n
+	addi 	$t0, $t0, 1				# i++ 
+	j loop							# next element
+
 end_for_all:
 	
-	jr	$ra			# Return to caller.
+	jr	$ra							# Return to caller.
 	
 ##############################################################################
 #
@@ -70,7 +77,18 @@ end_for_all:
 string_length:
 
 	#### Write your solution here ####
-	
+	#$v0 = length
+	#$a0 = string address
+	#$t0 = string address with offset
+	#$t1 = char at address
+	add		$v0, $zero, $zero	# Initialize string index i to zero.
+loop_string:
+	add		$t0, $v0, $a0		# string adress - offset in bytes
+	lb		$t1, 0($t0)			# character
+	beq		$t1, $zero, end_string_length
+	add		$v0, $v0, 1			# i++
+	j loop_string				# next character (byte)
+end_string_length:	
 	jr	$ra
 	
 ##############################################################################
@@ -88,15 +106,42 @@ string_length:
 ##############################################################################	
 string_for_each:
 
-	addi	$sp, $sp, -4		# PUSH return address to caller
-	sw	$ra, 0($sp)
-
-	#### Write your solution here ####
+	sw		$ra, -4($sp)			# PUSH return address to caller
+	sw		$s0, -8($sp)			# Save $s0 as callee
+	sw		$s1, -12($sp)			# Save $s1 as callee	
+	sw		$s2, -16($sp)			# Save $s2 as callee	
+	sw		$s3, -20($sp)			# Save $s3 as callee	
+	sw		$a1, -24($sp)			# Save $a1 as callee
+	addi	$sp, $sp, -24		
 	
-	lw	$ra, 0($sp)		# Pop return address to caller
-	addi	$sp, $sp, 4		
+	#### Write your solution here ####
+	#$s0 = char
+	#$s1 = i
+	#$s2 = $a0 = string address
+	#$s3 = $a1 = function address
+	
+	add		$s1, $zero, $zero	# Initialize string index i to zero.
+	add		$s2, $a0, $zero		# save $a0
+	add		$s3, $a1, $zero		# save $a1
+loop_char:
+	lb		$s0, 0($s2)			# character
+	beq		$s0, $zero, end_char
+	add		$a0, $zero, $s2
+	jal 	$s3					#subfunction call
+	add		$s1, $s1, 1			# i++
+	addi	$s2, $s2, 1			# string adress++
+	j loop_char					# next character (byte)
+end_char:		
+	
+	addi	$sp, $sp, 24	
+	lw		$ra, -4($sp)			# PUSH return address to caller
+	lw		$s0, -8($sp)			# return $s0 as callee
+	lw		$s1, -12($sp)			# return $s1 as callee	
+	lw		$s2, -16($sp)			# return $s2 as callee	
+	lw		$s3, -20($sp)			# return $s3 as callee	
+	lw		$a1, -24($sp)			# return $a1 as callee
 
-	jr	$ra
+	jr		$ra
 
 ##############################################################################
 #
@@ -108,9 +153,9 @@ string_for_each:
 to_upper:
 
 	#### Write your solution here ####
+	
     
-	jr	$ra
-
+	jr		$ra
 
 ##############################################################################
 #
@@ -145,88 +190,88 @@ STR_for_each_to_upper:
 #
 ##############################################################################	
 main:
-	addi	$sp, $sp, -4	# PUSH return address
-	sw	$ra, 0($sp)
+	addi	$sp, $sp, -4		# PUSH return address
+	sw		$ra, 0($sp)
 
 	##
 	### integer_array_sum
 	##
 	
-	li	$v0, 4
-	la	$a0, STR_sum_of_fibonacci_a
+	li		$v0, 4
+	la		$a0, STR_sum_of_fibonacci_a
 	syscall
 
-	lw 	$a0, ARRAY_SIZE
-	li	$v0, 1
+	lw 		$a0, ARRAY_SIZE
+	li		$v0, 1
 	syscall
 
-	li	$v0, 4
-	la	$a0, STR_sum_of_fibonacci_b
+	li		$v0, 4
+	la		$a0, STR_sum_of_fibonacci_b
 	syscall
 	
-	la	$a0, FIBONACCI_ARRAY
-	lw	$a1, ARRAY_SIZE
+	la		$a0, FIBONACCI_ARRAY
+	lw		$a1, ARRAY_SIZE
 	jal 	integer_array_sum
 
 	# Print sum
-	add	$a0, $v0, $zero
-	li	$v0, 1
+	add		$a0, $v0, $zero
+	li		$v0, 1
 	syscall
 
-	li	$v0, 4
-	la	$a0, NLNL
+	li		$v0, 4
+	la		$a0, NLNL
 	syscall
 	
-	la	$a0, STR_str
+	la		$a0, STR_str
 	jal	print_test_string
 
 	##
 	### string_length 
 	##
 	
-	li	$v0, 4
-	la	$a0, STR_string_length
+	li		$v0, 4
+	la		$a0, STR_string_length
 	syscall
 
-	la	$a0, STR_str
+	la		$a0, STR_str
 	jal 	string_length
 
-	add	$a0, $v0, $zero
-	li	$v0, 1
+	add		$a0, $v0, $zero
+	li		$v0, 1
 	syscall
 
 	##
 	### string_for_each(string, ascii)
 	##
 	
-	li	$v0, 4
-	la	$a0, STR_for_each_ascii
+	li		$v0, 4
+	la		$a0, STR_for_each_ascii
 	syscall
 	
-	la	$a0, STR_str
-	la	$a1, ascii
-	jal	string_for_each
+	la		$a0, STR_str
+	la		$a1, ascii
+	jal		string_for_each
 
 	##
 	### string_for_each(string, to_upper)
 	##
 	
-	li	$v0, 4
-	la	$a0, STR_for_each_to_upper
+	li		$v0, 4
+	la		$a0, STR_for_each_to_upper
 	syscall
 
-	la	$a0, STR_str
-	la	$a1, to_upper
-	jal	string_for_each
+	la		$a0, STR_str
+	la		$a1, to_upper
+	jal		string_for_each
 	
-	la	$a0, STR_str
-	jal	print_test_string
+	la		$a0, STR_str
+	jal		print_test_string
 	
 	
-	lw	$ra, 0($sp)	# POP return address
+	lw		$ra, 0($sp)	# POP return address
 	addi	$sp, $sp, 4	
 	
-	jr	$ra
+	jr		$ra
 
 ##############################################################################
 #
@@ -246,20 +291,20 @@ STR_quote:
 
 	.text
 
-	add	$t0, $a0, $zero
+	add		$t0, $a0, $zero
 	
-	li	$v0, 4
-	la	$a0, STR_str_is
+	li		$v0, 4
+	la		$a0, STR_str_is
 	syscall
 
-	add	$a0, $t0, $zero
+	add		$a0, $t0, $zero
 	syscall
 
-	li	$v0, 4	
-	la	$a0, STR_quote
+	li		$v0, 4	
+	la		$a0, STR_quote
 	syscall
 	
-	jr	$ra
+	jr		$ra
 	
 
 ##############################################################################
@@ -280,22 +325,21 @@ STR_the_ascii_value_is:
 
 	# Replace X with the input character
 	
-	add	$t1, $t0, 8	# Position of X
-	lb	$t2, 0($a0)	# Get the Ascii value
-	sb	$t2, 0($t1)
+	add		$t1, $t0, 8				# Position of X
+	lb		$t2, 0($a0)				# Get the Ascii value
+	sb		$t2, 0($t1)
 
 	# Print "The Ascii value of..."
 	
-	add	$a0, $t0, $zero 
-	li	$v0, 4
+	add		$a0, $t0, $zero 
+	li		$v0, 4
 	syscall
 
 	# Append the Ascii value
 	
-	add	$a0, $t2, $zero
-	li	$v0, 1
+	add		$a0, $t2, $zero
+	li		$v0, 1
 	syscall
 
 
-	jr	$ra
-	
+	jr		$ra 
