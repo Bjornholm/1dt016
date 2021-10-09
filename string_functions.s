@@ -89,7 +89,7 @@ loop_string:
 	add		$v0, $v0, 1			# i++
 	j loop_string				# next character (byte)
 end_string_length:	
-	jr	$ra
+	jr		$ra
 	
 ##############################################################################
 #
@@ -112,7 +112,7 @@ string_for_each:
 	sw		$s2, -16($sp)			# Save $s2 as callee	
 	sw		$s3, -20($sp)			# Save $s3 as callee	
 	sw		$a1, -24($sp)			# Save $a1 as callee
-	addi	$sp, $sp, -24		
+	addi		$sp, $sp, -24		
 	
 	#### Write your solution here ####
 	#$s0 = char
@@ -127,9 +127,9 @@ loop_char:
 	lb		$s0, 0($s2)			# character
 	beq		$s0, $zero, end_char
 	add		$a0, $zero, $s2
-	jal 	$s3					#subfunction call
+	jalr 	$s3					#subfunction call
 	add		$s1, $s1, 1			# i++
-	addi	$s2, $s2, 1			# string adress++
+	addi		$s2, $s2, 1			# string adress++
 	j loop_char					# next character (byte)
 end_char:		
 	
@@ -153,8 +153,18 @@ end_char:
 to_upper:
 
 	#### Write your solution here ####
+	## Ascii('a') = 97
+	#Ascii('z') = 122
+	#Ascii('A') = 65
+	#Ascii('Z') = 90
+	lb		$t0, 0($a0)			# character
+	addi 	$t1, $t0, -90 		# ascii 90 is cutoff point from upper to lowercase
 	
-    
+
+	bltz 	$t1, end_upper 		# om $t0 - 90 < 0 char is upper
+	addi 	$t0, $t0, -32		#-32 is difference between upper and lower
+	sb 		$t0, 0($a0)			#save modified char
+	end_upper:
 	jr		$ra
 
 ##############################################################################
@@ -272,6 +282,16 @@ main:
 	addi	$sp, $sp, 4	
 	
 	jr		$ra
+
+	##
+	### string_for_each(string, reverse_string )
+	##
+
+	#get string length
+	
+
+	#iterations = length/2 (fraction from uneven numbers discarded, 1 less i)
+
 
 ##############################################################################
 #
