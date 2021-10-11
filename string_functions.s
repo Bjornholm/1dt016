@@ -112,7 +112,7 @@ string_for_each:
 	sw		$s2, -16($sp)			# Save $s2 as callee	
 	sw		$s3, -20($sp)			# Save $s3 as callee	
 	sw		$a1, -24($sp)			# Save $a1 as callee
-	addi		$sp, $sp, -24		
+	addi	$sp, $sp, -24		
 	
 	#### Write your solution here ####
 	#$s0 = char
@@ -157,6 +157,7 @@ to_upper:
 	#Ascii('z') = 122
 	#Ascii('A') = 65
 	#Ascii('Z') = 90
+	#ONLY WORKS WITH STANDARD ASCII CHARACTERS aA TO zZ
 	lb		$t0, 0($a0)			# character
 	addi 	$t1, $t0, -90 		# ascii 90 is cutoff point from upper to lowercase
 	
@@ -166,6 +167,74 @@ to_upper:
 	sb 		$t0, 0($a0)			#save modified char
 	end_upper:
 	jr		$ra
+
+##############################################################################
+#
+#  DESCRIPTION: Reverses the input string.
+#	
+#        INPUT: $a0 - address of a character
+#				$a1 -
+#				$a2	- string length
+#				$a3 - 
+##############################################################################		
+reverse:
+	
+
+	add $t0, $a2, $a0 	# end char address
+	add $t1, $zero, $a0 # start char address
+	
+	sub $t4, $t1, $t0	# start - end
+
+	bgez $t4, end_reverse 
+	lb $t2, 0($t1) # load left char
+	lb $t3, 0($t0) # load right char
+	sb $t3, 0($t1) # save right -> left
+	sb $t2, 0($t0) # vice versa
+
+	#$a0 iterates in caller
+	addi $a2, $a2, -2 #-2 because $a0 iterates +1
+
+	end_reverse:
+	jr $ra
+
+##############################################################################
+#
+#  DESCRIPTION: Alternate Transforming lower case character [a-z] to 
+#  upper case [A-Z]. AaAaAaAa
+#	
+#        INPUT: $a0 - address of a character 
+#
+##############################################################################		
+camel:
+
+	#### Write your solution here ####
+	## Ascii('a') = 97
+	#Ascii('z') = 122
+	#Ascii('A') = 65
+	#Ascii('Z') = 90
+	#ONLY WORKS WITH STANDARD ASCII CHARACTERS aA TO zZ
+	
+	lb		$t0, 0($a0)			# character
+	addi 	$t1, $t0, -90 		# ascii 90 is cutoff point from upper to lowercase
+
+	beq		$a2, $zero, to_lower	
+	add 	$a2, $zero, $zero 	#Change upper/lower status flag
+
+	bltz 	$t1, end_camel 		# om $t0 - 90 < 0 char is upper
+	addi 	$t0, $t0, -32		#-32 is difference between upper and lower
+	sb 		$t0, 0($a0)			#save modified char
+
+	j end_camel
+	
+	to_lower:
+	bgtz 	$t1, end_camel 		# om $t0 - 90 < 0 char is upper
+	addi 	$t0, $t0, +32		#+32 is difference between upper and lower
+	sb 		$t0, 0($a0)			#save modified char
+	addi 	$a2, $zero, 1 	#Change upper/lower status flag
+
+	end_camel:
+	jr		$ra
+
 
 ##############################################################################
 #
@@ -190,6 +259,12 @@ STR_for_each_ascii:
 
 STR_for_each_to_upper:
 	.asciiz "\n\nstring_for_each(str, to_upper)\n\n"	
+
+STR_for_each_reverse:
+	.asciiz "\n\nstring_for_each(str, reverse)\n\n"
+
+STR_for_each_camel:
+	.asciiz "\n\nstring_for_each(str, camel)\n\n"
 
 	.text
 	.globl main
@@ -276,21 +351,47 @@ main:
 	
 	la		$a0, STR_str
 	jal		print_test_string
-	
-	
-	lw		$ra, 0($sp)	# POP return address
-	addi	$sp, $sp, 4	
-	
-	jr		$ra
 
 	##
-	### string_for_each(string, reverse_string )
+	### string_for_each(string, reverse )________________________
 	##
+
+	li		$v0, 4
+	la		$a0, STR_for_each_reverse
+	syscall
 
 	#get string length
-	
+	la		$a0, STR_str
+	jal 	string_length
+	add		$a2, $zero, $v0		#string length as input
+	addi	$a2, $a2, -1		#exclude null
 
-	#iterations = length/2 (fraction from uneven numbers discarded, 1 less i)
+	la		$a0, STR_str
+	la		$a1, reverse
+	jal		string_for_each
+
+	la		$a0, STR_str
+	jal		print_test_string
+
+	##
+	### String_for_each(string, camel)_____________________
+	##
+	li		$v0, 4
+	la		$a0, STR_for_each_camel
+	syscall
+
+	la		$a0, STR_str
+	la		$a1, camel
+	add		$a2, $zero, $zero #upper/lower status flag
+	jal		string_for_each
+
+	la		$a0, STR_str
+	jal		print_test_string
+
+	#_____________________________________________
+	lw		$ra, 0($sp)	# POP return address
+	addi	$sp, $sp, 4	
+	jr		$ra
 
 
 ##############################################################################
